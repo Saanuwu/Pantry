@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>My Pantry</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f7f5f2; min-height: 100vh; }
+  #app { max-width: 480px; margin: 0 auto; padding-bottom: 100px; }
+
+  /* Header */
+  .header {
+    background: #1a2e1a;
+    padding: 20px 18px 14px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+  .header-label { color: #8db88d; font-size: 11px; letter-spacing: 1.5px; margin-bottom: 2px; }
+  .header-title { color: #fff; font-size: 22px; font-weight: 700; display: flex; align-items: center; gap: 10px; }
+  .low-badge { background: #e8573a; color: #fff; font-size: 12px; font-weight: 600; border-radius: 20px; padding: 2px 9px; }
+  .add-btn { background: #4a7c4a; color: #fff; border: none; border-radius: 12px; padding: 9px 16px; font-size: 13px; font-weight: 600; cursor: pointer; }
+
+  /* Search */
+  .search { width: 100%; padding: 9px 14px; border-radius: 10px; border: none; background: #2d4a2d; color: #e8f0e8; font-size: 14px; outline: none; }
+  .search::placeholder { color: #6a9a6a; }
+
+  /* Tabs */
+  .tabs { display: flex; gap: 8px; margin-top: 10px; }
+  .tab { border-radius: 8px; padding: 6px 14px; font-size: 13px; font-weight: 600; cursor: pointer; }
+  .tab.active { background: #4a7c4a; color: #fff; border: none; }
+  .tab.inactive { background: transparent; color: #8db88d; border: 1px solid #3a5a3a; }
+
+  /* Content */
+  .content { padding: 12px 14px; }
+
+  /* Category */
+  .cat-header { width: 100%; display: flex; align-items: center; justify-content: space-between; background: none; border: none; padding: 8px 4px; cursor: pointer; text-align: left; }
+  .cat-left { display: flex; align-items: center; gap: 8px; }
+  .cat-icon { font-size: 18px; }
+  .cat-name { font-weight: 700; font-size: 14px; color: #2d4a2d; letter-spacing: 0.3px; }
+  .cat-count { background: #d9ead9; color: #3a6a3a; font-size: 11px; font-weight: 700; border-radius: 20px; padding: 1px 7px; }
+  .cat-toggle { color: #6a9a6a; font-size: 18px; line-height: 1; }
+  .cat-section { margin-bottom: 10px; }
+
+  /* Items list */
+  .items-list { background: #fff; border-radius: 14px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+  .item-row { padding: 12px 14px; border-top: 1px solid #f0ede8; }
+  .item-row:first-child { border-top: none; }
+  .item-row.low { background: #fff8f6; }
+  .item-main { display: flex; align-items: center; justify-content: space-between; }
+  .item-left { flex: 1; }
+  .item-name-row { display: flex; align-items: center; gap: 6px; }
+  .item-name { font-weight: 500; font-size: 14px; color: #1a2e1a; }
+  .low-tag { background: #e8573a; color: #fff; font-size: 10px; font-weight: 700; border-radius: 6px; padding: 1px 6px; }
+  .item-sub { font-size: 12px; color: #888; margin-top: 2px; }
+  .item-controls { display: flex; align-items: center; gap: 4px; }
+  .stock-num { font-weight: 700; font-size: 16px; min-width: 22px; text-align: center; }
+  .stock-num.low { color: #e8573a; }
+  .stock-num.ok { color: #1a2e1a; }
+
+  /* Buttons */
+  .btn { border: none; border-radius: 8px; width: 30px; height: 30px; font-size: 16px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .btn-minus { background: #f0ede8; color: #555; }
+  .btn-plus { background: #d9ead9; color: #2d4a2d; }
+  .btn-edit { background: #f0f0f0; color: #555; margin-left: 4px; font-size: 13px; }
+  .btn-del { background: #fdecea; color: #c0392b; font-size: 13px; }
+
+  /* Edit mode */
+  .edit-name { width: 100%; margin-bottom: 8px; padding: 6px 10px; border-radius: 8px; border: 1px solid #ccc; font-size: 14px; }
+  .edit-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .edit-label { font-size: 12px; color: #666; }
+  .edit-num { width: 60px; padding: 5px 8px; border-radius: 8px; border: 1px solid #ccc; font-size: 14px; }
+  .btn-save { background: #4a7c4a; color: #fff; border: none; border-radius: 8px; padding: 6px 12px; font-weight: 600; cursor: pointer; font-size: 13px; }
+  .btn-cancel-sm { background: #eee; color: #555; border: none; border-radius: 8px; padding: 6px 10px; cursor: pointer; font-size: 13px; }
+
+  /* Shopping list */
+  .shopping-box { background: #fff8f6; border: 1px solid #f0c0b0; border-radius: 14px; padding: 16px; margin-top: 10px; }
+  .shopping-title { font-weight: 700; color: #e8573a; margin-bottom: 6px; font-size: 14px; }
+  .shopping-items { font-size: 13px; color: #555; line-height: 1.7; }
+
+  /* Modal */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 100; display: flex; align-items: flex-end; }
+  .modal { background: #fff; border-radius: 20px 20px 0 0; padding: 24px; width: 100%; }
+  .modal-title { font-weight: 700; font-size: 17px; margin-bottom: 16px; color: #1a2e1a; }
+  .modal-label { font-size: 12px; color: #666; display: block; margin-bottom: 4px; }
+  .modal-group { margin-bottom: 12px; }
+  .modal-input, .modal-select { width: 100%; padding: 9px 12px; border-radius: 10px; border: 1px solid #ddd; font-size: 14px; background: #f7f5f2; }
+  .modal-row { display: flex; gap: 12px; margin-bottom: 20px; }
+  .modal-row .modal-group { flex: 1; margin-bottom: 0; }
+  .modal-btns { display: flex; gap: 10px; }
+  .btn-modal-cancel { flex: 1; padding: 12px; border-radius: 12px; border: 1px solid #ddd; background: #f0ede8; font-weight: 600; cursor: pointer; font-size: 14px; }
+  .btn-modal-add { flex: 2; padding: 12px; border-radius: 12px; border: none; background: #1a2e1a; color: #fff; font-weight: 700; cursor: pointer; font-size: 14px; }
+
+  /* Toast */
+  .toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: #1a2e1a; color: #fff; padding: 10px 22px; border-radius: 30px; font-size: 14px; font-weight: 600; z-index: 200; box-shadow: 0 4px 20px rgba(0,0,0,0.2); pointer-events: none; }
+
+  /* Empty */
+  .empty { text-align: center; padding: 40px 20px; color: #888; font-size: 14px; }
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+const STORAGE_KEY = 'pantry-items-v1';
+
+const INITIAL_DATA = [
+  { id: 1, category: "Pulses & Lentils", item: "Kabuli Chana", current: 2, minimum: 1 },
+  { id: 2, category: "Pulses & Lentils", item: "Black Chana", current: 4, minimum: 1 },
+  { id: 3, category: "Pulses & Lentils", item: "Rajma", current: 2, minimum: 1 },
+  { id: 4, category: "Pulses & Lentils", item: "Masoor Whole", current: 1, minimum: 1 },
+  { id: 5, category: "Pulses & Lentils", item: "Masoor Malka", current: 0, minimum: 1 },
+  { id: 6, category: "Pulses & Lentils", item: "Moong Whole", current: 0, minimum: 1 },
+  { id: 7, category: "Pulses & Lentils", item: "Moong Yellow", current: 2, minimum: 1 },
+  { id: 8, category: "Pulses & Lentils", item: "Lobia", current: 1, minimum: 1 },
+  { id: 9, category: "Pulses & Lentils", item: "Chana Dal", current: 1, minimum: 1 },
+  { id: 10, category: "Pulses & Lentils", item: "Urad Dhuli", current: 1, minimum: 1 },
+  { id: 11, category: "Grains & Flour", item: "White Rice", current: 2, minimum: 1 },
+  { id: 12, category: "Grains & Flour", item: "Brown Rice", current: 0, minimum: 1 },
+  { id: 13, category: "Grains & Flour", item: "Kodu Millet", current: 1, minimum: 1 },
+  { id: 14, category: "Grains & Flour", item: "Fox Millet", current: 0, minimum: 1 },
+  { id: 15, category: "Grains & Flour", item: "Poha", current: 1, minimum: 1 },
+  { id: 16, category: "Grains & Flour", item: "Oats", current: 1, minimum: 1 },
+  { id: 17, category: "Grains & Flour", item: "Suji", current: 1, minimum: 1 },
+  { id: 18, category: "Grains & Flour", item: "Besan", current: 0, minimum: 1 },
+  { id: 19, category: "Grains & Flour", item: "Rice Flour", current: 1, minimum: 1 },
+  { id: 20, category: "Grains & Flour", item: "Rajgira Flour", current: 1, minimum: 1 },
+  { id: 21, category: "Grains & Flour", item: "Rajgira Seeds", current: 1, minimum: 1 },
+  { id: 22, category: "Grains & Flour", item: "Maida", current: 0, minimum: 1 },
+  { id: 23, category: "Grains & Flour", item: "Quinoa", current: 1, minimum: 1 },
+  { id: 24, category: "Nuts, Seeds & Dry Fruits", item: "Watermelon Seeds", current: 2, minimum: 1 },
+  { id: 25, category: "Nuts, Seeds & Dry Fruits", item: "Sunflower Seeds", current: 1, minimum: 1 },
+  { id: 26, category: "Nuts, Seeds & Dry Fruits", item: "Pumpkin Seeds", current: 1, minimum: 1 },
+  { id: 27, category: "Nuts, Seeds & Dry Fruits", item: "Flax Seeds", current: 0, minimum: 1 },
+  { id: 28, category: "Nuts, Seeds & Dry Fruits", item: "Raisins", current: 2, minimum: 1 },
+  { id: 29, category: "Nuts, Seeds & Dry Fruits", item: "Cashewnuts", current: 3, minimum: 1 },
+  { id: 30, category: "Nuts, Seeds & Dry Fruits", item: "Almonds", current: 1, minimum: 1 },
+  { id: 31, category: "Nuts, Seeds & Dry Fruits", item: "Peanuts", current: 0, minimum: 1 },
+  { id: 32, category: "Nuts, Seeds & Dry Fruits", item: "Roasted Chana", current: 2, minimum: 1 },
+  { id: 33, category: "Nuts, Seeds & Dry Fruits", item: "Dates", current: 1, minimum: 1 },
+  { id: 34, category: "Nuts, Seeds & Dry Fruits", item: "Makhana", current: 1, minimum: 1 },
+  { id: 35, category: "Nuts, Seeds & Dry Fruits", item: "Khas-Khas", current: 0, minimum: 1 },
+  { id: 36, category: "Nuts, Seeds & Dry Fruits", item: "Desiccated Coconut", current: 1, minimum: 1 },
+  { id: 37, category: "Spices & Condiments", item: "Jeera", current: 3, minimum: 1 },
+  { id: 38, category: "Spices & Condiments", item: "Red Chili", current: 1, minimum: 1 },
+  { id: 39, category: "Spices & Condiments", item: "Tej Patta", current: 1, minimum: 1 },
+  { id: 40, category: "Spices & Condiments", item: "Haldi", current: 2, minimum: 1 },
+  { id: 41, category: "Spices & Condiments", item: "Tamarind", current: 1, minimum: 1 },
+  { id: 42, category: "Spices & Condiments", item: "Cardamom", current: 1, minimum: 1 },
+  { id: 43, category: "Spices & Condiments", item: "Ajwain", current: 1, minimum: 1 },
+  { id: 44, category: "Spices & Condiments", item: "Clove", current: 1, minimum: 1 },
+  { id: 45, category: "Spices & Condiments", item: "Methi Seeds", current: 3, minimum: 1 },
+  { id: 46, category: "Spices & Condiments", item: "Kasturi Methi", current: 1, minimum: 1 },
+  { id: 47, category: "Spices & Condiments", item: "Mustard Seeds Small", current: 1, minimum: 1 },
+  { id: 48, category: "Spices & Condiments", item: "Yellow Mustard", current: 1, minimum: 1 },
+  { id: 49, category: "Spices & Condiments", item: "Rai", current: 1, minimum: 1 },
+  { id: 50, category: "Spices & Condiments", item: "Saboot Dhaniya", current: 0, minimum: 1 },
+  { id: 51, category: "Spices & Condiments", item: "Hing", current: 4, minimum: 1 },
+  { id: 52, category: "Spices & Condiments", item: "Sea Salt", current: 1, minimum: 1 },
+  { id: 53, category: "Spices & Condiments", item: "Black Salt", current: 1, minimum: 1 },
+  { id: 54, category: "Spices & Condiments", item: "White Pepper", current: 1, minimum: 1 },
+  { id: 55, category: "Spices & Condiments", item: "Black Pepper", current: 1, minimum: 1 },
+  { id: 56, category: "Sweeteners & Beverages", item: "Jaggery Powder", current: 1, minimum: 1 },
+  { id: 57, category: "Sweeteners & Beverages", item: "Raw Sugar / Khand", current: 0, minimum: 1 },
+  { id: 58, category: "Sweeteners & Beverages", item: "Masala Chai", current: 1, minimum: 1 },
+  { id: 59, category: "Sweeteners & Beverages", item: "Coffee", current: 1, minimum: 1 },
+  { id: 60, category: "Sweeteners & Beverages", item: "Corn Flakes", current: 1, minimum: 1 },
+  { id: 61, category: "Oils", item: "Oil", current: 2, minimum: 1 },
+  { id: 62, category: "Household Supplies", item: "Slick Wraps", current: 2, minimum: 1 },
+  { id: 63, category: "Household Supplies", item: "Butter Paper", current: 1, minimum: 1 },
+  { id: 64, category: "Household Supplies", item: "Paper Box", current: 1, minimum: 1 },
+  { id: 65, category: "Household Supplies", item: "Kitchen Roll", current: 1, minimum: 1 },
+  { id: 66, category: "Household Supplies", item: "Toilet Paper", current: 1, minimum: 1 },
+  { id: 67, category: "Household Supplies", item: "Tissues", current: 1, minimum: 1 },
+];
+
+const CATEGORY_ICONS = {
+  "Pulses & Lentils": "🫘",
+  "Grains & Flour": "🌾",
+  "Nuts, Seeds & Dry Fruits": "🥜",
+  "Spices & Condiments": "🌶️",
+  "Sweeteners & Beverages": "☕",
+  "Oils": "🫙",
+  "Household Supplies": "🧻",
+};
+
+const CATEGORY_ORDER = [
+  "Pulses & Lentils","Grains & Flour","Nuts, Seeds & Dry Fruits",
+  "Spices & Condiments","Sweeteners & Beverages","Oils","Household Supplies"
+];
+
+// State
+let items = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null') || INITIAL_DATA;
+let activeTab = 'all';
+let expandedCategories = new Set(CATEGORY_ORDER);
+let editingId = null;
+let editValues = {};
+let searchQuery = '';
+let addingItem = false;
+let newItem = { category: CATEGORY_ORDER[0], item: '', current: 0, minimum: 1 };
+let toastTimer = null;
+
+function save() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+}
+
+function needsRestock(item) {
+  return item.current <= item.minimum - 1;
+}
+
+function showToast(msg) {
+  const existing = document.querySelector('.toast');
+  if (existing) existing.remove();
+  if (toastTimer) clearTimeout(toastTimer);
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  toastTimer = setTimeout(() => t.remove(), 2000);
+}
+
+function render() {
+  const restockCount = items.filter(needsRestock).length;
+
+  let filtered = [...items];
+  if (activeTab === 'restock') filtered = filtered.filter(needsRestock);
+  if (searchQuery.trim()) {
+    const q = searchQuery.toLowerCase();
+    filtered = filtered.filter(i => i.item.toLowerCase().includes(q) || i.category.toLowerCase().includes(q));
+  }
+
+  const grouped = {};
+  filtered.forEach(item => {
+    if (!grouped[item.category]) grouped[item.category] = [];
+    grouped[item.category].push(item);
+  });
+
+  const restockList = items.filter(needsRestock).map(i => i.item).join(', ');
+
+  document.getElementById('app').innerHTML = `
+    <div class="header">
+      <div class="header-top">
+        <div>
+          <div class="header-label">MY PANTRY</div>
+          <div class="header-title">
+            ${items.length} items
+            ${restockCount > 0 ? `<span class="low-badge">${restockCount} low</span>` : ''}
+          </div>
+        </div>
+        <button class="add-btn" onclick="openAdd()">+ Add</button>
+      </div>
+      <input class="search" placeholder="Search pantry..." value="${searchQuery.replace(/"/g,'&quot;')}" oninput="onSearch(this.value)">
+      <div class="tabs">
+        <button class="tab ${activeTab==='all'?'active':'inactive'}" onclick="setTab('all')">All</button>
+        <button class="tab ${activeTab==='restock'?'active':'inactive'}" onclick="setTab('restock')">Restock (${restockCount})</button>
+      </div>
+    </div>
+
+    <div class="content">
+      ${CATEGORY_ORDER.filter(cat => grouped[cat]).map(cat => `
+        <div class="cat-section">
+          <button class="cat-header" onclick="toggleCat('${cat.replace(/'/g,"\\'")}')">
+            <span class="cat-left">
+              <span class="cat-icon">${CATEGORY_ICONS[cat]}</span>
+              <span class="cat-name">${cat}</span>
+              <span class="cat-count">${grouped[cat].length}</span>
+            </span>
+            <span class="cat-toggle">${expandedCategories.has(cat) ? '−' : '+'}</span>
+          </button>
+          ${expandedCategories.has(cat) ? `
+            <div class="items-list">
+              ${grouped[cat].map((item, idx) => {
+                const low = needsRestock(item);
+                const isEditing = editingId === item.id;
+                return `
+                  <div class="item-row ${low ? 'low' : ''}" ${idx===0?'style="border-top:none"':''}>
+                    ${isEditing ? `
+                      <input class="edit-name" value="${item.item.replace(/"/g,'&quot;')}" id="edit-name-${item.id}">
+                      <div class="edit-row">
+                        <span class="edit-label">Stock</span>
+                        <input class="edit-num" type="number" min="0" value="${editValues.current}" id="edit-cur-${item.id}">
+                        <span class="edit-label">Min</span>
+                        <input class="edit-num" type="number" min="0" value="${editValues.minimum}" id="edit-min-${item.id}">
+                        <button class="btn-save" onclick="saveEdit(${item.id})">Save</button>
+                        <button class="btn-cancel-sm" onclick="cancelEdit()">✕</button>
+                      </div>
+                    ` : `
+                      <div class="item-main">
+                        <div class="item-left">
+                          <div class="item-name-row">
+                            <span class="item-name">${item.item}</span>
+                            ${low ? '<span class="low-tag">LOW</span>' : ''}
+                          </div>
+                          <div class="item-sub">min ${item.minimum} · stock ${item.current}</div>
+                        </div>
+                        <div class="item-controls">
+                          <button class="btn btn-minus" onclick="adjustStock(${item.id},-1)">−</button>
+                          <span class="stock-num ${low?'low':'ok'}">${item.current}</span>
+                          <button class="btn btn-plus" onclick="adjustStock(${item.id},1)">+</button>
+                          <button class="btn btn-edit" onclick="startEdit(${item.id})">✏️</button>
+                          <button class="btn btn-del" onclick="deleteItem(${item.id})">🗑️</button>
+                        </div>
+                      </div>
+                    `}
+                  </div>`;
+              }).join('')}
+            </div>
+          ` : ''}
+        </div>
+      `).join('')}
+
+      ${activeTab === 'restock' && restockCount > 0 ? `
+        <div class="shopping-box">
+          <div class="shopping-title">🛒 Shopping List</div>
+          <div class="shopping-items">${restockList}</div>
+        </div>
+      ` : ''}
+
+      ${filtered.length === 0 ? '<div class="empty">Nothing here!</div>' : ''}
+    </div>
+
+    ${addingItem ? `
+      <div class="modal-overlay" onclick="if(event.target===this)closeAdd()">
+        <div class="modal">
+          <div class="modal-title">Add New Item</div>
+          <div class="modal-group">
+            <label class="modal-label">Category</label>
+            <select class="modal-select" id="new-cat">
+              ${CATEGORY_ORDER.map(c => `<option ${newItem.category===c?'selected':''}>${c}</option>`).join('')}
+            </select>
+          </div>
+          <div class="modal-group">
+            <label class="modal-label">Item name</label>
+            <input class="modal-input" id="new-name" placeholder="e.g. Chana dal" value="${newItem.item.replace(/"/g,'&quot;')}">
+          </div>
+          <div class="modal-row">
+            <div class="modal-group">
+              <label class="modal-label">Current stock</label>
+              <input class="modal-input" type="number" min="0" id="new-cur" value="${newItem.current}">
+            </div>
+            <div class="modal-group">
+              <label class="modal-label">Minimum</label>
+              <input class="modal-input" type="number" min="0" id="new-min" value="${newItem.minimum}">
+            </div>
+          </div>
+          <div class="modal-btns">
+            <button class="btn-modal-cancel" onclick="closeAdd()">Cancel</button>
+            <button class="btn-modal-add" onclick="addItem()">Add Item</button>
+          </div>
+        </div>
+      </div>
+    ` : ''}
+  `;
+}
+
+function onSearch(v) { searchQuery = v; render(); }
+function setTab(t) { activeTab = t; render(); }
+function toggleCat(cat) {
+  expandedCategories.has(cat) ? expandedCategories.delete(cat) : expandedCategories.add(cat);
+  render();
+}
+function adjustStock(id, delta) {
+  items = items.map(i => i.id === id ? { ...i, current: Math.max(0, i.current + delta) } : i);
+  save(); render();
+}
+function startEdit(id) {
+  const item = items.find(i => i.id === id);
+  editingId = id;
+  editValues = { current: item.current, minimum: item.minimum };
+  render();
+  document.getElementById(`edit-name-${id}`).focus();
+}
+function cancelEdit() { editingId = null; render(); }
+function saveEdit(id) {
+  const name = document.getElementById(`edit-name-${id}`).value.trim();
+  const cur = parseInt(document.getElementById(`edit-cur-${id}`).value) || 0;
+  const min = parseInt(document.getElementById(`edit-min-${id}`).value) || 0;
+  if (!name) return;
+  items = items.map(i => i.id === id ? { ...i, item: name, current: cur, minimum: min } : i);
+  editingId = null;
+  save(); render();
+  showToast('Saved ✓');
+}
+function deleteItem(id) {
+  items = items.filter(i => i.id !== id);
+  save(); render();
+  showToast('Item removed');
+}
+function openAdd() { addingItem = true; newItem = { category: CATEGORY_ORDER[0], item: '', current: 0, minimum: 1 }; render(); }
+function closeAdd() { addingItem = false; render(); }
+function addItem() {
+  const name = document.getElementById('new-name').value.trim();
+  const cat = document.getElementById('new-cat').value;
+  const cur = parseInt(document.getElementById('new-cur').value) || 0;
+  const min = parseInt(document.getElementById('new-min').value) || 0;
+  if (!name) { document.getElementById('new-name').focus(); return; }
+  const id = Math.max(0, ...items.map(i => i.id)) + 1;
+  items.push({ id, category: cat, item: name, current: cur, minimum: min });
+  addingItem = false;
+  save(); render();
+  showToast('Item added ✓');
+}
+
+render();
+</script>
+</body>
+</html>
